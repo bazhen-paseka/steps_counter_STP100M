@@ -40,6 +40,7 @@
 #include "main.h"
 #include "stm32f1xx_hal.h"
 #include "i2c.h"
+#include "tim.h"
 #include "usart.h"
 #include "gpio.h"
 
@@ -54,6 +55,11 @@
 
 	#include <string.h>
 	#include "lcd1602_fc113_sm.h"
+
+	// next variables used in IRQ. See file stm32f1xx_it.c
+	volatile  uint8_t	   time_to_show_u8 = 0 ;		// base on TIm3
+	volatile uint32_t	step_counter_1_u32 = 0 ;		//	PA0
+	volatile uint32_t	step_counter_2_u32 = 0 ;		//	PA1
 
 /* USER CODE END Includes */
 
@@ -107,8 +113,11 @@ int main(void)
   MX_GPIO_Init();
   MX_I2C1_Init();
   MX_USART1_UART_Init();
+  MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
 
+	uint32_t	step_buff_1_u32 = 1;
+	uint32_t	step_buff_2_u32 = 1;
 
 	char uart_buffer_c[100];
 	sprintf(uart_buffer_c,"\r\nSteps counter STP100M\r\nUART1 for debug started. Speed 38400\r\n");
@@ -138,6 +147,10 @@ int main(void)
 	HAL_Delay(1000);
 	//LCD1602_Clear(&h1_lcd1602_fc113);
 
+	HAL_TIM_Base_Start(&htim3);
+	HAL_TIM_Base_Start_IT(&htim3);
+
+	LCD1602_Clear(&h1_lcd1602_fc113);
 
   /* USER CODE END 2 */
 
@@ -145,8 +158,28 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  HAL_GPIO_TogglePin(LED_RED_GPIO_Port, LED_RED_Pin);
-	  HAL_Delay(100);
+
+	if (time_to_show_u8 == 1 )
+	{
+		time_to_show_u8 = 0;
+		HAL_GPIO_TogglePin(LED_RED_GPIO_Port, LED_RED_Pin);	// blink red led on board
+
+		if (   (step_buff_1_u32 != step_counter_1_u32)
+			|| (step_buff_2_u32 != step_counter_2_u32) )
+		{
+			sprintf(uart_buffer_c,"L: %5d\n", (int)step_counter_1_u32);
+			LCD1602_Print_Line(&h1_lcd1602_fc113, uart_buffer_c, strlen(uart_buffer_c));
+
+			sprintf(uart_buffer_c,"R: %5d\n", (int)step_counter_2_u32);
+			LCD1602_Print_Line(&h1_lcd1602_fc113, uart_buffer_c, strlen(uart_buffer_c));
+
+			sprintf(uart_buffer_c,"left: %d   right: %d\r\n", (int)step_counter_1_u32, (int)step_counter_2_u32);
+			HAL_UART_Transmit(&huart1, (uint8_t *)uart_buffer_c, strlen(uart_buffer_c), 100);
+
+			step_buff_1_u32 = step_counter_1_u32;
+			step_buff_2_u32 = step_counter_2_u32;
+		}
+	}
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */

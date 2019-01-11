@@ -37,9 +37,14 @@
 
 /* USER CODE BEGIN 0 */
 
+	extern uint8_t	time_to_show_u8;
+	extern uint32_t	step_counter_1_u32;
+	extern uint32_t	step_counter_2_u32;
+
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
+extern TIM_HandleTypeDef htim3;
 
 /******************************************************************************/
 /*            Cortex-M3 Processor Interruption and Exception Handlers         */ 
@@ -198,6 +203,8 @@ void EXTI0_IRQHandler(void)
 {
   /* USER CODE BEGIN EXTI0_IRQn 0 */
 
+	step_counter_1_u32++;
+
   /* USER CODE END EXTI0_IRQn 0 */
   HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_0);
   /* USER CODE BEGIN EXTI0_IRQn 1 */
@@ -212,11 +219,29 @@ void EXTI1_IRQHandler(void)
 {
   /* USER CODE BEGIN EXTI1_IRQn 0 */
 
+		step_counter_2_u32++;
+
   /* USER CODE END EXTI1_IRQn 0 */
   HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_1);
   /* USER CODE BEGIN EXTI1_IRQn 1 */
 
   /* USER CODE END EXTI1_IRQn 1 */
+}
+
+/**
+* @brief This function handles TIM3 global interrupt.
+*/
+void TIM3_IRQHandler(void)
+{
+  /* USER CODE BEGIN TIM3_IRQn 0 */
+
+		time_to_show_u8 = 1;
+
+  /* USER CODE END TIM3_IRQn 0 */
+  HAL_TIM_IRQHandler(&htim3);
+  /* USER CODE BEGIN TIM3_IRQn 1 */
+
+  /* USER CODE END TIM3_IRQn 1 */
 }
 
 /* USER CODE BEGIN 1 */
