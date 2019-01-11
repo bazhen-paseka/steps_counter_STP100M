@@ -53,6 +53,7 @@
 	//	I2C	- PB6 SCL, PB7 - SDA;
 
 	#include <string.h>
+	#include "lcd1602_fc113_sm.h"
 
 /* USER CODE END Includes */
 
@@ -108,9 +109,35 @@ int main(void)
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
 
+
 	char uart_buffer_c[100];
 	sprintf(uart_buffer_c,"\r\nSteps counter STP100M\r\nUART1 for debug started. Speed 38400\r\n");
 	HAL_UART_Transmit(&huart1, (uint8_t *)uart_buffer_c, strlen(uart_buffer_c), 100);
+
+
+	#define ADR_I2C_FC113 0x27
+
+	lcd1602_fc113_struct h1_lcd1602_fc113 =
+	{
+		.i2c = &hi2c1,
+		.device_i2c_address = ADR_I2C_FC113
+	};
+
+	LCD1602_Init(&h1_lcd1602_fc113);
+	I2C_ScanBus(&h1_lcd1602_fc113);
+
+	LCD1602_Clear(&h1_lcd1602_fc113);
+	sprintf(uart_buffer_c,"Steps Counter\r\n");
+	LCD1602_Print_Line(&h1_lcd1602_fc113, uart_buffer_c, strlen(uart_buffer_c));
+
+	sprintf(uart_buffer_c," STP100M\r\n");
+	LCD1602_Print_Line(&h1_lcd1602_fc113, uart_buffer_c, strlen(uart_buffer_c));
+
+	sprintf(uart_buffer_c,"LCD1602 over FC113\r\n");
+	HAL_UART_Transmit(&huart1, (uint8_t *)uart_buffer_c, strlen(uart_buffer_c), 100);
+	HAL_Delay(1000);
+	//LCD1602_Clear(&h1_lcd1602_fc113);
+
 
   /* USER CODE END 2 */
 
